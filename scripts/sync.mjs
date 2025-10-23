@@ -192,6 +192,32 @@ async function prepareAndPublishPackage(version) {
       await fs.rename(srcPath, destPath);
     }
 
+    const readmeMarkdown = `# sqlite-source
+
+This package contains the amalgamation sources for SQLite ${version}.
+
+See https://github.com/tensionlabs/sqlite-source#releases for a full list of available releases.
+
+## Installation
+
+\`\`\`bash
+npm install sqlite-source@sqlite-amalgamation-${version}
+\`\`\`
+
+## Contents
+
+This package contains the upstream \`sqlite-amalgamation-${versionCode}\` files without modifications
+at the root of the package:
+
+${files.map((file) => `- ${file}`).join("\n")}
+- package.json
+- README.md
+`;
+    await fs.writeFile(
+      path.join(packageDir, "README.md"),
+      `${readmeMarkdown}\n`
+    );
+
     const packageJson = {
       name: "sqlite-source",
       version: npmVersion,
