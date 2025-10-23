@@ -1,11 +1,11 @@
 {
-  "3.50.4": null,
-  "3.50.3": null,
-  "3.50.2": null,
-  "3.50.1": null,
-  "3.50.0": null,
-  "3.49.2": null,
-  "3.49.1": null,
-  "3.49.0": null,
-  "3.48.0": null
+  "3.50.4": "0.3500400.0-sqlite-amalgamation",
+  "3.50.3": "0.3500300.0-sqlite-amalgamation",
+  "3.50.2": "0.3500200.0-sqlite-amalgamation",
+  "3.50.1": "0.3500100.0-sqlite-amalgamation",
+  "3.50.0": "0.3500000.0-sqlite-amalgamation",
+  "3.49.2": "0.3490200.0-sqlite-amalgamation",
+  "3.49.1": "0.3490100.0-sqlite-amalgamation",
+  "3.49.0": "0.3490000.0-sqlite-amalgamation",
+  "3.48.0": "0.3480000.0-sqlite-amalgamation"
 }
