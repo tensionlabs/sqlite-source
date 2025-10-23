@@ -284,6 +284,7 @@ async function main() {
     manifest
   ).reverse()) {
     if (entryNpmVersion === null) {
+      console.log(`➡️ Publishing SQLite ${entryVersion}`);
       const npmVersion = computeNpmVersion(entryVersion);
       const npmDistTag = computeNpmDistTag(entryVersion);
       if (npmMetadata.versions[npmVersion]) {
