@@ -105,7 +105,7 @@ npm install sqlite-source@sqlite-amalgamation-${latestVersion}
     ...manifestEntries.map(([version]) => {
       const releaseSlug = version.replaceAll(".", "_");
       const releaseUrl = `https://sqlite.org/releaselog/${releaseSlug}.html`;
-      const npmDistTag = `sqlite-amalgamation-${version}`;
+      const npmDistTag = computeNpmDistTag(version);
       const npmUrl = `https://www.npmjs.com/package/sqlite-source/v/${npmDistTag}`;
       return `| [${version}](${releaseUrl}) | [${npmDistTag}](${npmUrl}) |`;
     }),
@@ -123,6 +123,15 @@ function computeVersionCode(version) {
   return String(code);
 }
 
+function computeNpmVersion(version) {
+  const versionCode = computeVersionCode(version);
+  return `0.${versionCode}.0-sqlite-amalgamation`;
+}
+
+function computeNpmDistTag(version) {
+  return `sqlite-amalgamation-${version}`;
+}
+
 async function fetchReleaseMetadata(version) {
   console.log(`⏳ Fetching release metadata for SQLite ${version}`);
   const slug = version.replaceAll(".", "_");
@@ -135,10 +144,31 @@ async function fetchReleaseMetadata(version) {
   return { versionCode, downloadUrl };
 }
 
-async function prepareAndPublishPackage(version, isLatestVersion) {
+async function fetchNpmMetadata() {
+  console.log("⏳ Fetching npm metadata");
+  const response = await fetch("https://registry.npmjs.org/sqlite-source");
+  return await response.json();
+}
+
+async function addDistTagIfNeeded(npmMetadata, npmVersion, npmDistTag) {
+  if (npmMetadata["dist-tags"][npmDistTag] === npmVersion) {
+    console.log(`➡️ Already tagged`);
+  } else {
+    console.log(`⏳ Adding dist tag`);
+    if (!DRY_RUN) {
+      await exec(
+        "npm",
+        ["dist-tag", "add", `sqlite-source@${npmVersion}`, npmDistTag],
+        { cwd: ROOT }
+      );
+    }
+  }
+}
+
+async function prepareAndPublishPackage(version) {
   const { versionCode, downloadUrl } = await fetchReleaseMetadata(version);
-  const npmVersion = `0.${versionCode}.0-sqlite-amalgamation`;
-  const npmDistTag = `sqlite-amalgamation-${version}`;
+  const npmVersion = computeNpmVersion(version);
+  const npmDistTag = computeNpmDistTag(version);
 
   const workRoot = await fs.mkdtemp(path.join(os.tmpdir(), "sqlite-sync-"));
   const archiveName = `sqlite-amalgamation-${versionCode}`;
@@ -184,19 +214,9 @@ async function prepareAndPublishPackage(version, isLatestVersion) {
     await exec(
       "npm",
       ["publish", ...maybeDryRunArgs, "--provenance", "--tag", npmDistTag],
-      {
-        cwd: packageDir,
-      }
+      { cwd: packageDir }
     );
 
-    if (isLatestVersion && !DRY_RUN) {
-      console.log(`⏳ Tagging npm package as latest`);
-      await exec(
-        "npm",
-        ["dist-tag", "add", `sqlite-source@${npmVersion}`, "latest"],
-        { cwd: packageDir }
-      );
-    }
     return npmVersion;
   } finally {
     await fs.rm(workRoot, { recursive: true, force: true });
@@ -224,6 +244,7 @@ async function commitAndPush(publishedVersions) {
 async function main() {
   console.log("➡️ Begin sync");
   let manifest = await readManifest();
+  const npmMetadata = await fetchNpmMetadata();
   const latestVersion = await fetchLatestVersion();
   console.log(`➡️ Latest SQLite version: ${latestVersion}`);
 
@@ -233,16 +254,27 @@ async function main() {
 
   const publishedVersions = [];
 
-  for (const [version, npmVersion] of Object.entries(manifest).reverse()) {
-    if (npmVersion === null) {
-      const publishedNpmVersion = await prepareAndPublishPackage(
-        version,
-        version === latestVersion
-      );
-      manifest[version] = publishedNpmVersion;
-      publishedVersions.push(version);
+  for (const [entryVersion, entryNpmVersion] of Object.entries(
+    manifest
+  ).reverse()) {
+    if (entryNpmVersion === null) {
+      const npmVersion = computeNpmVersion(entryVersion);
+      const npmDistTag = computeNpmDistTag(entryVersion);
+      if (npmMetadata.versions[npmVersion]) {
+        console.log(`➡️ Already published`);
+        manifest[entryVersion] = npmVersion;
+        publishedVersions.push(entryVersion);
+        await addDistTagIfNeeded(npmMetadata, npmVersion, npmDistTag);
+      } else {
+        const npmVersion = await prepareAndPublishPackage(entryVersion);
+        manifest[entryVersion] = npmVersion;
+        publishedVersions.push(entryVersion);
+      }
     }
   }
+
+  const latestNpmVersion = Object.entries(manifest)[0][1];
+  await addDistTagIfNeeded(npmMetadata, latestNpmVersion, "latest");
 
   if (publishedVersions.length > 0) {
     await updateManifest(manifest);
