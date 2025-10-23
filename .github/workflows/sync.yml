@@ -22,4 +22,7 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
       - name: Sync
+        env:
+          # Remove once https://github.com/npm/cli/issues/8547 is resolved
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
         run: node scripts/sync.mjs
