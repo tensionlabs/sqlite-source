@@ -10,7 +10,7 @@ Example:
 
 <!-- installation:start -->
 ```bash
-npm install sqlite-source@sqlite-amalgamation-3.50.4
+npm install sqlite-source@sqlite-amalgamation-3.51.0
 ```
 <!-- installation:end -->
 
@@ -47,6 +47,7 @@ const sqlite3cPath = require.resolve('sqlite-source/sqlite3.c');
 <!-- releases:start -->
 | SQLite | npm |
 | ------ | --- |
+| [3.51.0](https://sqlite.org/releaselog/3_51_0.html) | [sqlite-amalgamation-3.51.0](https://www.npmjs.com/package/sqlite-source/v/sqlite-amalgamation-3.51.0) |
 | [3.50.4](https://sqlite.org/releaselog/3_50_4.html) | [sqlite-amalgamation-3.50.4](https://www.npmjs.com/package/sqlite-source/v/sqlite-amalgamation-3.50.4) |
 | [3.50.3](https://sqlite.org/releaselog/3_50_3.html) | [sqlite-amalgamation-3.50.3](https://www.npmjs.com/package/sqlite-source/v/sqlite-amalgamation-3.50.3) |
 | [3.50.2](https://sqlite.org/releaselog/3_50_2.html) | [sqlite-amalgamation-3.50.2](https://www.npmjs.com/package/sqlite-source/v/sqlite-amalgamation-3.50.2) |
